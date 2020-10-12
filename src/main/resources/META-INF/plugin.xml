@@ -1,0 +1,33 @@
+<idea-plugin>
+    <id>com.scoful.genCloud</id>
+    <name>Gen Cloud</name>
+    <vendor email="1269717999@qq.com" url="https://github.com/scoful">Scoful</vendor>
+
+    <description><![CDATA[
+        IDEA自用常用工具hub
+        <li>1. 选中翻译</li>
+        <li>2. 选中时间戳转化成可理解格式</li>
+    ]]></description>
+
+    <change-notes><![CDATA[
+      <li>1.1 : fix bug</li>
+      <li>1.0 : init </li>
+    ]]>
+    </change-notes>
+
+    <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+        <action id="com.scoful.actions" class="com.scoful.actions.MyTranslateAction" text="MyTranslate" description="翻译">
+            <add-to-group group-id="EditMenu" anchor="first"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="meta I"/>
+        </action>
+    </actions>
+</idea-plugin>
