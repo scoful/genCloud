@@ -7,8 +7,8 @@
 3. 右键打包成zip文件
 4. 导入idea，通过硬盘安装插件
 # 3. 参考文献
-https://jetbrains.org/intellij/sdk/docs/intro/welcome.html
-https://blog.xiaohansong.com/idea-plugin-development.html
-https://juejin.im/post/6844904127990857742
-https://github.com/Skykai521/ECTranslation
+-   https://jetbrains.org/intellij/sdk/docs/intro/welcome.html
+-   https://blog.xiaohansong.com/idea-plugin-development.html
+-   https://juejin.im/post/6844904127990857742
+-   https://github.com/Skykai521/ECTranslation
 
