@@ -28,11 +28,9 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-        <![CDATA[
-                  <li>1.2.1 : fix bug</li>
-                  <li>1.2 : 增加功能，选中2行mybatis的sql日志组装成可执行语句</li>
-                  <li>1.1 : fix bug</li>
-                  <li>1.0 : init </li>
-                ]]>
-            ]]>"""
+    <li>1.2.1 : fix bug</li>
+    <li>1.2 : 增加功能，选中2行mybatis的sql日志组装成可执行语句</li>
+    <li>1.1 : fix bug</li>
+    <li>1.0 : init </li>
+"""
 }

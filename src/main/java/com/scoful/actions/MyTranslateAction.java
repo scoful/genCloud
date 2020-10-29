@@ -81,7 +81,7 @@ public class MyTranslateAction extends AnAction {
                                     result.append("'").append(newParametersList.get(i)).append("'");
                                 }
                             }
-                            balloonNotice(result.toString(), editor);
+                            balloonNotice(result.toString().replace("<", "&lt;").replace(">", "&gt;"), editor);
                             LoggerUtil.info(result.toString());
                         }
                     } else {
