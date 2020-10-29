@@ -78,7 +78,7 @@ public class MyTranslateAction extends AnAction {
                             for (int i = 0; i < preparingList.size(); i++) {
                                 result.append(preparingList.get(i));
                                 if (newParametersList.size() > 0 && i <= newParametersList.size() - 1) {
-                                    result.append(newParametersList.get(i));
+                                    result.append("'").append(newParametersList.get(i)).append("'");
                                 }
                             }
                             balloonNotice(result.toString(), editor);
