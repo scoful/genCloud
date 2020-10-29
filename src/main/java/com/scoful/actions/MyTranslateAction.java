@@ -19,6 +19,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.awt.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +52,37 @@ public class MyTranslateAction extends AnAction {
                             balloonNotice(format, editor);
                         } else {
                             balloonNotice(selectedText, editor);
+                        }
+                    } else if (selectedText.contains("==>  Preparing: ")) {
+                        // myBatis打印的sql语句组装
+                        if (selectedText.contains("\n")) {
+                            String[] rows = selectedText.split("\n");
+                            if (rows.length != 2) {
+                                balloonNotice("只支持2行组装!", editor);
+                                return;
+                            }
+                            String[] row1 = rows[0].split("==>  Preparing: ");
+                            String[] preparings = row1[1].split("\\?");
+                            List<String> preparingList = Arrays.asList(preparings);
+                            String[] row2 = rows[1].split("==> Parameters: ");
+                            ArrayList<String> newParametersList = new ArrayList<>();
+                            if (row2.length > 1) {
+                                String[] parameters = row2[1].split(",");
+                                List<String> parametersList = Arrays.asList(parameters);
+                                for (String s : parametersList) {
+                                    String[] split = s.split("\\(");
+                                    newParametersList.add(split[0]);
+                                }
+                            }
+                            StringBuilder result = new StringBuilder();
+                            for (int i = 0; i < preparingList.size(); i++) {
+                                result.append(preparingList.get(i));
+                                if (newParametersList.size() > 0 && i <= newParametersList.size() - 1) {
+                                    result.append(newParametersList.get(i));
+                                }
+                            }
+                            balloonNotice(result.toString(), editor);
+                            LoggerUtil.info(result.toString());
                         }
                     } else {
                         balloonNotice(getTransLatesResult(selectedText), editor);
