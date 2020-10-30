@@ -1,6 +1,7 @@
 # 1. 功能
 1. 双击选中实现简单英汉互译
 2. 双击选中时间戳实现转可理解日期格式
+3. 选中2行mybatis的sql日志组装成可执行语句
 
 # 2. 如何打包
 1. 修改build.gradle和plugin.xml修改版本信息或change-notes
