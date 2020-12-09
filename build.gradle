@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.scoful'
-version '1.2.1-SNAPSHOT'
+version '1.2.2-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -25,9 +25,11 @@ dependencies {
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version '2020.1.2'
+    updateSinceUntilBuild false
 }
 patchPluginXml {
     changeNotes """
+    <li>1.2.2 : intellij.updateSinceUntilBuild设置为false，解决跨版本问题</li>
     <li>1.2.1 : fix bug</li>
     <li>1.2 : 增加功能，选中2行mybatis的sql日志组装成可执行语句</li>
     <li>1.1 : fix bug</li>
