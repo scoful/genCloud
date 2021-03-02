@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.scoful'
-version '1.2.2-SNAPSHOT'
+version '1.2.3-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -17,6 +17,8 @@ dependencies {
     compile group: 'org.springframework', name: 'spring-core', version: '5.2.9.RELEASE'
     // https://mvnrepository.com/artifact/org.springframework/spring-beans
     compile group: 'org.springframework', name: 'spring-beans', version: '5.2.9.RELEASE'
+    // https://mvnrepository.com/artifact/org.springframework/spring-context
+    compile group: 'org.springframework', name: 'spring-context', version: '5.2.9.RELEASE'
     // https://mvnrepository.com/artifact/cn.hutool/hutool-all
     compile group: 'cn.hutool', name: 'hutool-all', version: '5.4.4'
     testCompile group: 'junit', name: 'junit', version: '4.12'
@@ -29,6 +31,7 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
+    <li>1.2.3 : 增加功能，选中cron表达式后显示下5次运行时间</li>
     <li>1.2.2 : intellij.updateSinceUntilBuild设置为false，解决跨版本问题</li>
     <li>1.2.1 : fix bug</li>
     <li>1.2 : 增加功能，选中2行mybatis的sql日志组装成可执行语句</li>

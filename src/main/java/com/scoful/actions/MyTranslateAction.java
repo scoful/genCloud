@@ -15,14 +15,14 @@ import com.intellij.ui.JBColor;
 import com.scoful.utils.LoggerUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.web.client.RestTemplate;
 
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author: tangwei
@@ -33,7 +33,7 @@ public class MyTranslateAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent e) {
-        if (!isFastClick(1000)) {
+        if (!this.isFastClick(1000)) {
             LoggerUtil.init(getClass().getSimpleName(), LoggerUtil.DEBUG);
             //获取当前编辑器对象
             Editor editor = e.getData(CommonDataKeys.EDITOR);
@@ -49,16 +49,16 @@ public class MyTranslateAction extends AnAction {
                             // 时间戳转换为LocalDateTime
                             LocalDateTime localDateTime = LocalDateTimeUtil.of(Long.parseLong(selectedText));
                             String format = LocalDateTimeUtil.format(localDateTime, DatePattern.NORM_DATETIME_PATTERN);
-                            balloonNotice(format, editor);
+                            this.balloonNotice(format, editor);
                         } else {
-                            balloonNotice(selectedText, editor);
+                            this.balloonNotice(selectedText, editor);
                         }
                     } else if (selectedText.contains("==>  Preparing: ")) {
                         // myBatis打印的sql语句组装
                         if (selectedText.contains("\n")) {
                             String[] rows = selectedText.split("\n");
                             if (rows.length != 2) {
-                                balloonNotice("只支持2行组装!", editor);
+                                this.balloonNotice("只支持2行组装!", editor);
                                 return;
                             }
                             String[] row1 = rows[0].split("==>  Preparing: ");
@@ -81,19 +81,48 @@ public class MyTranslateAction extends AnAction {
                                     result.append("'").append(newParametersList.get(i)).append("'");
                                 }
                             }
-                            balloonNotice(result.toString().replace("<", "&lt;").replace(">", "&gt;"), editor);
+                            this.balloonNotice(result.toString().replace("<", "&lt;").replace(">", "&gt;"), editor);
                             LoggerUtil.info(result.toString());
                         }
+                    } else if (this.isCronExpression(selectedText)) {
+                        // 选中cron表达式后显示下5次运行时间
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(selectedText);
+                        // currentTime为计算下次时间点的开始时间
+                        Date currentTime = new Date();
+                        StringBuilder stringBuilder = new StringBuilder();
+                        for (int i = 0; i < 5; i++) {
+                            Date nextTimePoint = cronSequenceGenerator.next(currentTime);
+                            stringBuilder.append(sdf.format(nextTimePoint)).append("\n");
+                            currentTime = nextTimePoint;
+                        }
+                        this.balloonNotice(stringBuilder.toString(), editor);
                     } else {
-                        balloonNotice(getTransLatesResult(selectedText), editor);
+                        this.balloonNotice(this.getTransLatesResult(selectedText), editor);
                     }
                 } else {
-                    balloonNotice("请至少选中一点内容!", editor);
+                    this.balloonNotice("请至少选中一点内容!", editor);
                 }
             }
         }
     }
 
+    /**
+     * 判断是否cron表达式
+     *
+     * @param cronExpression
+     * @return
+     */
+    private boolean isCronExpression(String cronExpression) {
+        return CronSequenceGenerator.isValidExpression(cronExpression);
+    }
+
+    /**
+     * 弹窗显示返回内容
+     *
+     * @param selectedText
+     * @param editor
+     */
     private void balloonNotice(String selectedText, Editor editor) {
         JBPopupFactory factory = JBPopupFactory.getInstance();
         factory.createHtmlTextBalloonBuilder(selectedText, null, new JBColor(new Color(186, 238, 186), new Color(73, 117, 73)), null)
@@ -102,6 +131,12 @@ public class MyTranslateAction extends AnAction {
                .show(factory.guessBestPopupLocation(editor), Balloon.Position.below);
     }
 
+    /**
+     * 获取翻译结果
+     *
+     * @param txt
+     * @return
+     */
     private String getTransLatesResult(String txt) {
         RestTemplate restTemplate = new RestTemplate();
         try {
@@ -120,6 +155,12 @@ public class MyTranslateAction extends AnAction {
         return "--FAILED--!";
     }
 
+    /**
+     * 判断是否快速点击（1秒内）
+     *
+     * @param timeMillis
+     * @return
+     */
     private boolean isFastClick(long timeMillis) {
         long time = System.currentTimeMillis();
         long timeD = time - latestClickTime;
