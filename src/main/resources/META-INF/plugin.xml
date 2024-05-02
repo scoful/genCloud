@@ -12,6 +12,7 @@
     ]]></description>
 
     <change-notes><![CDATA[
+      <li>1.2.4 : 修改翻译的接口，修复若干bug</li>
       <li>1.2.3 : 增加功能，选中cron表达式后显示下5次运行时间</li>
       <li>1.2.2 : intellij.updateSinceUntilBuild设置为false，解决跨版本问题</li>
       <li>1.2.1 : fix bug</li>

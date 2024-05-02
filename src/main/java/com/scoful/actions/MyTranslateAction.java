@@ -13,12 +13,16 @@ import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.ui.JBColor;
 import com.scoful.utils.LoggerUtil;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.support.CronSequenceGenerator;
-import org.springframework.web.client.RestTemplate;
+import org.json.JSONObject;
+import org.quartz.CronExpression;
 
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -86,19 +90,22 @@ public class MyTranslateAction extends AnAction {
                         }
                     } else if (this.isCronExpression(selectedText)) {
                         // 选中cron表达式后显示下5次运行时间
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(selectedText);
-                        // currentTime为计算下次时间点的开始时间
-                        Date currentTime = new Date();
-                        StringBuilder stringBuilder = new StringBuilder();
-                        for (int i = 0; i < 5; i++) {
-                            Date nextTimePoint = cronSequenceGenerator.next(currentTime);
-                            stringBuilder.append(sdf.format(nextTimePoint)).append("\n");
-                            currentTime = nextTimePoint;
+                        try {
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            CronExpression cronExpression = new CronExpression(selectedText);
+                            Date currentTime = new Date();
+                            StringBuilder stringBuilder = new StringBuilder();
+                            for (int i = 0; i < 5; i++) {
+                                Date nextTimePoint = cronExpression.getNextValidTimeAfter(currentTime);
+                                stringBuilder.append(sdf.format(nextTimePoint)).append("\n");
+                                currentTime = nextTimePoint;
+                            }
+                            this.balloonNotice(stringBuilder.toString(), editor);
+                        } catch (Exception exception) {
+                            exception.printStackTrace();
                         }
-                        this.balloonNotice(stringBuilder.toString(), editor);
                     } else {
-                        this.balloonNotice(this.getTransLatesResult(selectedText), editor);
+                        this.balloonNotice(this.translateFunc(selectedText), editor);
                     }
                 } else {
                     this.balloonNotice("请至少选中一点内容!", editor);
@@ -109,51 +116,87 @@ public class MyTranslateAction extends AnAction {
 
     /**
      * 判断是否cron表达式
-     *
-     * @param cronExpression
-     * @return
      */
     private boolean isCronExpression(String cronExpression) {
-        return CronSequenceGenerator.isValidExpression(cronExpression);
+        try {
+            new CronExpression(cronExpression);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
      * 弹窗显示返回内容
-     *
-     * @param selectedText
-     * @param editor
      */
     private void balloonNotice(String selectedText, Editor editor) {
         JBPopupFactory factory = JBPopupFactory.getInstance();
-        factory.createHtmlTextBalloonBuilder(selectedText, null, new JBColor(new Color(186, 238, 186), new Color(73, 117, 73)), null)
-               .setFadeoutTime(5000)
-               .createBalloon()
-               .show(factory.guessBestPopupLocation(editor), Balloon.Position.below);
+        factory.createHtmlTextBalloonBuilder(selectedText, null, new JBColor(new Color(186, 238, 186), new Color(73, 117, 73)), null).setFadeoutTime(5000).createBalloon().show(factory.guessBestPopupLocation(editor), Balloon.Position.below);
+    }
+
+    public static boolean isChinese(String str) {
+        // 使用正则表达式匹配所有的中文字符
+        return str.matches("[\\u4E00-\\u9FA5]+");
+    }
+
+    private boolean isEnglish(String str) {
+        return str.matches("^[a-zA-Z]+$");
     }
 
     /**
      * 获取翻译结果
-     *
-     * @param txt
-     * @return
      */
-    private String getTransLatesResult(String txt) {
-        RestTemplate restTemplate = new RestTemplate();
+    private String translateFunc(String txt) {
+        String source = "en";
+        String target = "zh";
+        if (isChinese(txt)) {
+            source = "zh";
+            target = "en";
+        } else if (isEnglish(txt)) {
+            source = "en";
+            target = "zh";
+        }
+
+        String url = "https://transmart.qq.com/api/imt";
         try {
-            ResponseEntity<Map> forEntity = restTemplate.getForEntity("https://fanyi.youdao.com/openapi.do?keyfrom=lulua-net&key=620584095&type=data&doctype=json&version=1.1&q={txt}", Map.class, txt);
-            HttpStatus statusCode = forEntity.getStatusCode();
-            if (statusCode.is2xxSuccessful()) {
-                List data = (List) forEntity.getBody().get("translation");
-                Object result = data.get(0);
-                LoggerUtil.info(forEntity.getBody().toString());
-                return result.toString();
+            JSONObject data = new JSONObject();
+            data.put("header", new JSONObject().put("fn", "auto_translation").put("session", "").put("client_key", "browser-chrome-117.0.0-Windows 10-4daf3e2e-b66e-43a1-944a-a8f6b42c9199-1696226243060").put("user", ""));
+            data.put("type", "plain");
+            data.put("model_category", "normal");
+            data.put("text_domain", "general");
+            data.put("source", new JSONObject().put("lang", source).put("text_list", new String[]{txt}));
+            data.put("target", new JSONObject().put("lang", target));
+
+            HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            conn.setDoOutput(true);
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = data.toString().getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                StringBuilder response = new StringBuilder();
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+                JSONObject result = new JSONObject(response.toString());
+                if (Objects.equals(result.getJSONObject("header").getString("ret_code"), "succ")) {
+                    LoggerUtil.info(result.getJSONArray("auto_translation").getString(0));
+                    return result.getJSONArray("auto_translation").getString(0);
+                } else {
+                    return "--FAILED--!";
+                }
             }
         } catch (Exception e) {
             LoggerUtil.error(e.toString());
             return "--ERROR,may be lost network--!";
         }
-        return "--FAILED--!";
     }
+
 
     /**
      * 判断是否快速点击（1秒内）
