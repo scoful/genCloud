@@ -11,7 +11,7 @@
 4. 双击选中内容，即可看到效果。
 5. 还可以先鼠标选中内容，然后点击菜单：Edit-MyTranslate，即可看到效果。
 
-# 3. 如何在IDEA运行
+# 3. 如何在IDEA运行源码
 1. Clone项目代码到本地，通过IDEA打开
 2. 右侧Gradle侧边栏-genCloud-Tasks-intellij-runIde
 
